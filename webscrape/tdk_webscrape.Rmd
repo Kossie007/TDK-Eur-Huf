@@ -1,0 +1,189 @@
+---
+title: "TDK web scraping"
+author: "Dittrich Levente"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc:true
+    toc_float:true
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(rvest)
+library(quantmod)
+library(openxlsx)
+```
+
+# Magyar Hang // hang.hu
+
+```{r reader function}
+mh_reader = function(link, max_page, id){
+  
+  ##################################################################################################
+  # reading the link
+  ##################################################################################################
+  
+  #iterating trough the pages and collecting the data
+  for(i in seq(1,max_page,by=1)){
+    
+    # reading the html
+    page = read_html(paste0(link, i))
+    
+    # extracting the title
+    title = page %>% html_nodes(".post-list .entry-title a") %>% html_text()
+    
+    # extracting the date
+    date = page %>% html_nodes(".post-list li:nth-child(2)") %>% html_text()
+    
+    # making a dataframe from the title and date
+    page_df = data.frame(title, date)
+    
+    # concanating the newly read dataframe to past dataframes
+    if(i == 1){
+      df = page_df
+    }
+    else{
+      df = rbind(df, page_df)
+    }
+  }
+  
+  ##################################################################################################
+  # transforming the data
+  ##################################################################################################
+  
+  hungarian_months <- c("január" = "01.", "február" = "02.", "március" = "03.",
+                      "április" = "04.", "május" = "05.", "június" = "06.",
+                      "július" = "07.", "augusztus" = "08.", "szeptember" = "09.",
+                      "október" = "10.", "november" = "11.", "december" = "12.")
+  
+  df$date = str_replace_all(df$date, hungarian_months)
+  df$date = as.Date(df$date, format = "%Y. %m. %d.")
+  
+  
+  return(df)
+  
+  
+}
+```
+
+
+## Kormanyinfo
+
+```{r magyar hang kinfo}
+link = "https://hang.hu/kereses/cimke/kormanyinfo-1462?page="
+max_page = 20
+id = "Kormanyinfo"
+mh_kinfo = mh_reader(link, max_page, id)
+
+head(mh_kinfo)
+```
+
+
+## Varga Mihaly
+
+```{r magyar hang vargamihaly}
+link = "https://hang.hu/kereses/cimke/varga-mihaly-660?page="
+max_page = 14
+id = "VargaMihaly"
+mh_vm = mh_reader(link, max_page)
+
+head(mh_vm)
+```
+
+
+## Nagy Marton
+
+```{r magyar hang nagymarton}
+link = "https://hang.hu/kereses/cimke/nagy-marton-27845?page="
+max_page = 10
+id = "NagyMarton"
+mh_nm = mh_reader(link, max_page, id)
+
+head(mh_nm)
+```
+
+
+## Matolcsy Gyorgy
+
+```{r hang matolcsy, message=FALSE, error=FALSE}
+link = "https://hang.hu/kereses/cimke/matolcsy-gyorgy-631?page="
+max_page = 13
+id = "MatolcsyGyorgy"
+mh_mgy = mh_reader(link, max_page, id)
+
+head(mh_mgy)
+```
+
+## Aggregating the data
+
+```{r}
+mh_nm$date[mh_nm$title == "Nehézsúlyú üzletemberek, fekete öves hadakozók"] = as.Date("2022-12-05")
+mh_mgy$date[mh_mgy$title == "Nehézsúlyú üzletemberek, fekete öves hadakozók"] = as.Date("2022-12-05")
+```
+
+
+```{r}
+eurhuf = as.data.frame(getSymbols("EURHUF=X", auto.assign = FALSE, from = "2018-06-01"))
+usdhuf = as.data.frame(getSymbols("USDHUF=X", auto.assign = FALSE, from = "2018-06-01"))
+
+kinfo_dummy = as.integer(row.names(eurhuf) %in% mh_kinfo$date)
+vm_dummy = as.integer(row.names(eurhuf) %in% mh_vm$date)
+nm_dummy = as.integer(row.names(eurhuf) %in% mh_nm$date)
+mgy_dummy = as.integer(row.names(eurhuf) %in% mh_mgy$date)
+
+df = cbind(row.names(eurhuf),eurhuf, usdhuf, kinfo_dummy, vm_dummy, nm_dummy, mgy_dummy)
+
+write.xlsx(list("Base df" = df, "Kormanyinfo" = mh_kinfo, "Varga Mihaly" = mh_vm, "Nagy Marton" = mh_nm, "Matolcsy Gyorgy" = mh_mgy), "TDK_data.xlsx")
+```
+
+
+# Portfolio // portfolio.hu
+
+## Kormanyinfo
+
+```{r hang kinfo}
+
+```
+
+
+## Varga Mihaly
+
+```{r hang vargamihaly}
+
+```
+
+
+## Nagy Marton
+
+```{r, eval=FALSE, include=FALSE}
+link = "https://www.portfolio.hu/cimke/nagy%20marton?page="
+
+for(i in seq(1,24,by=1)){
+  
+  print(paste("page", i))
+  
+  page = read_html(paste0(link, i))
+  
+  title = page %>% html_nodes(".d-flex h3 a") %>% html_text()
+  
+  #subtitle = page %>% html_nodes(".d-flex p") %>% html_text()
+  
+  date = page %>% html_nodes(".bigger-image time") %>% html_text()
+  
+  # page_df = data.frame(title, subtitle, date)
+  page_df = data.frame(title, date)
+  
+  if(i == 1){
+    df_p_nm = page_df
+  }
+  else{
+    df_p_nm = rbind(df_p_nm, page_df)
+  }
+  
+  Sys.sleep(10)
+}
+
+head(df_p_nm)
+```
+
