@@ -43,11 +43,12 @@ ggplot(Training, aes(x = Time)) +
        caption = "Forrás: Yahoo Finance, Magyar Hang, MNB. Saját szerkesztés.")+
   theme_minimal() +
   theme_bw()+
-  theme(axis.title.x = element_blank()) +
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0)) +
   scale_x_date(breaks = "year", 
                date_labels = "%Y", 
                limits = as.Date(c("2018-05-31", "2024-10-31")))+
-  scale_y_continuous(labels = scales::comma)
+  
   ggsave("arfolyam_midnennel_felrakva.png")
 
 
@@ -55,7 +56,7 @@ ggplot(Training, aes(x = Time)) +
 
 # Augmented Dickey-Fuller test
 adf.test(Training$eur) 
-
+?adf.test
 # Stacionerré alakítás
 Training$d_eur <- c(NA, diff(log(Training$eur)))
 Training <-  Training[-1,]
@@ -73,14 +74,14 @@ ggplot(Training, aes(x = Time)) +
        caption = "Saját számítás és szerkesztés.")+
   theme_minimal() +  # Letisztult téma
   theme(axis.title.x = element_blank()) +
-  scale_y_continuous(labels = scales::comma)+ 
   theme_minimal() +
   theme_bw()+
-  theme(axis.title.x = element_blank()) +
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0)) +
   scale_x_date(breaks = "year", 
                date_labels = "%Y", 
-               limits = as.Date(c("2018-05-31", "2024-10-31")))+
-  scale_y_continuous(labels = scales::comma)
+               limits = as.Date(c("2018-05-31", "2024-10-31")))
+  
 ggsave("loghozam_alakulasa.png")    
       
       
@@ -251,8 +252,10 @@ coeftest_df_arima <- data.frame(Tengelymetszet = coeftest_results[, "Estimate"],
                                 `z érték` = coeftest_results[, "z value"],
                                 `P(>|z|)` = coeftest_results[, "Pr(>|z|)"])
 coeftest_df_arima %>%
-  kbl(digits = 4, align = "c", caption = "Az ARIMA(2,0,2) modell együtthatótáblája") %>%
+  kbl(digits = 4, align = "c", caption = "Az ARIMA(2,0,2) modell együtthatótáblája", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
+
 
 
 #ARIMA(2,1,2) ábra
@@ -268,8 +271,8 @@ ggplot(Training, aes(x = Time)) +
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
   scale_color_manual(values = c("Tényleges Euró loghozam" = "blue", "Becsült Euró loghozam" = "red"))
 ggsave("arima_becsult_loghozam.png")
 
@@ -288,7 +291,8 @@ coeftest_df_arimax <- data.frame(Tengelymetszet = coeftest_results_arimax[, "Est
                                  `P(>|z|)` = coeftest_results_arimax[, "Pr(>|z|)"])
                                 
 coeftest_df_arimax %>%
-  kbl(digits = 4, align = "c", caption = "Az ARIMAX(2,0,2) modell értékei") %>%
+  kbl(digits = 4, align = "c", caption = "Az ARIMAX(2,0,2) modell értékei", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 
@@ -312,7 +316,8 @@ coeftest_df_garch <- as.data.frame(modell_fit_22_11@fit$robust.matcoef)
 colnames(coeftest_df_garch) <- c("Tengelymetszet", "Standard hiba", "t-érték","P(>|t|)" )
 
 coeftest_df_garch %>%
-  kbl(digits = 4, align = "c", caption = "Az GARCH(1,1) modell értékei") %>%
+  kbl(digits = 4, align = "c", caption = "Az GARCH(1,1) modell értékei", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 becs_szoras_22_11 <- sigma(modell_fit_22_11)
@@ -346,7 +351,7 @@ for (i in 0:2) {
       modell_fit <- ugarchfit(spec = modell_spec, data = Training$d_eur)
   
       ic <- infocriteria(modell_fit)
-      ic_results <- rbind(ic_results, data.frame(i = i, j = j, AIC = ic[1], BIC = ic[2], HQ = ic[3]))
+      ic_results <- rbind(ic_results, data.frame(i = i, j = j, AIC = ic[1], BIC = ic[2], HQ = ic[4]))
       
       cat("Coefficient matrix for GARCH(", i, ",", j, "):\n")
       print(modell_fit@fit$robust.matcoef)
@@ -439,9 +444,9 @@ plot(modell_fit, which = 'all')
 
 ic <- infocriteria(modell_fit)
 
-result <- modell_fit@fit$robust.matcoef
 result %>%
-  kbl(digits = 4, align = "c", caption = "ARIMA(2,1,2)-GARCH(1,1) modell") %>%
+  kbl(digits = 4, align = "c", caption = "ARIMA(2,1,2)-GARCH(1,1) modell", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 becs_szoras <- sigma(modell_fit)
@@ -453,8 +458,9 @@ ggplot(Training, aes(x = Time)) +
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y", limits = as.Date(c("2018-05-31", "2024-10-31")))+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma) 
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))
+
 ggsave("szoras_arima212_garch11.png")
 
 # Gördülőablakos 
@@ -481,8 +487,10 @@ ggplot(garch_roll_forecast, aes(x = filtered_data$Time[1:162])) +
        subtitle = "ARIMA(2,1,2)-GARCH(1,1) modell",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma)
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))+
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
+
 ggsave("var_arima212_garch11.png")
 
 report(garch_roll_result, type = "VaR", VaR.alpha = 0.05)
@@ -503,8 +511,9 @@ ggplot(filtered_data, aes(x = Time)) +
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")+
   scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))
 ggsave("forecast_arima212_garch11.png")
 
@@ -551,7 +560,7 @@ arma_order <- c(2, 2)
 garch_order <- c(1, 1)
 
 # Külső regresszorok és kombinációik
-external_vars <- c('kinfo', 'vargaMihaly', 'matolcsyGyorgy', 'nagyMarton', 'alapkamat')
+external_vars <- c('alapkamat', 'kinfo', 'vargaMihaly', 'matolcsyGyorgy', 'nagyMarton')
 external_combinations <- c(external_vars, unlist(lapply(1:length(external_vars), function(n) {
   combn(external_vars, n, simplify = FALSE)
 }), recursive = FALSE))
@@ -592,7 +601,7 @@ for (ext_vars in external_combinations) {
       regressors = paste(ext_vars, collapse = ", "),
       AIC = ic_mean[1],
       BIC = ic_mean[2],
-      HQ = ic_mean[3]
+      HQ = ic_mean[4]
     ))
   }, error = function(e) {
     cat("Error in mean model with regressors:", paste(ext_vars, collapse = ", "), "\n")
@@ -616,7 +625,7 @@ for (ext_vars in external_combinations) {
       regressors = paste(ext_vars, collapse = ", "),
       AIC = ic_var[1],
       BIC = ic_var[2],
-      HQ = ic_var[3]
+      HQ = ic_var[4]
     ))
   }, error = function(e) {
     cat("Error in variance model with regressors:", paste(ext_vars, collapse = ", "), "\n")
@@ -650,7 +659,7 @@ for (ext_vars in external_combinations) {
                              "Variance:", paste(var_vars, collapse = ", ")),
           AIC = ic_mixed[1],
           BIC = ic_mixed[2],
-          HQ = ic_mixed[3]
+          HQ = ic_mixed[4]
         ))
       }, error = function(e) {
         cat("Error in mixed model with mean regressors:", paste(mean_vars, collapse = ", "),
@@ -664,6 +673,7 @@ for (ext_vars in external_combinations) {
 results %>%
   kbl(digits = 4, align = "c", caption = "A GARCHx modellek infocrotériumai") %>%
   kable_styling(full_width = FALSE, position = "center")
+write.csv(results, file="AICBICHQ.csv")
 
 # Legjobb modell
 best_model_aic <- results[which.min(results$AIC), ]
@@ -698,7 +708,7 @@ arma_order <- c(2, 2)
 garch_order <- c(1,1)
 
 # ARIMAX(2,1,2)-GARCH(1,1), várhatóértékben AK (alapkamat)
-name_mean1 <- "ARIMAX(2,1,2)-GARCH(1,1) modell, várhatóértékben AK (alapkamat)"
+name_mean1 <- "ARIMAX(2,1,2)-GARCH(1,1) modell, várható értékben AK"
 mean_vars <- as.matrix(Training[,c('alapkamat')])
 modell_spec_mean1 <- ugarchspec(mean.model = list(armaOrder = arma_order, 
                                                   external.regressors = mean_vars), 
@@ -712,7 +722,8 @@ ic_mean1 <- infocriteria(modell_fit_mean1)
 
 result_mean1 <- modell_fit_mean1@fit$robust.matcoef
 result_mean1 %>%
-  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCH(1,1) modell, várhatóértékben AK (alapkamat), modell együtthatói") %>%
+  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCH(1,1) modell, várható értékben AK, modell együtthatói", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 becs_szoras_mean1 <- sigma(modell_fit_mean1)
@@ -720,12 +731,13 @@ ggplot(Training, aes(x = Time)) +
   geom_line(aes(y = becs_szoras_mean1), color = "blue", size = 1.2) + 
   labs(y = "Szórás",
        title = "Az Euró-Forint loghozamának szórása",
-       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várhatóértékben AK (alapkamat)",
+       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várható értékben AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y", limits = as.Date(c("2018-05-31", "2024-10-31")))+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-  scale_y_continuous(labels = scales::comma) 
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))
+  
 ggsave("szoras_arima212_garch11_mean1.png")
 
 # Gördülőablakos 
@@ -747,11 +759,12 @@ ggplot(garch_roll_forecast_mean1, aes(x = filtered_data$Time[1:162])) +
   geom_line(aes(y = `alpha(5%)`, color = "VaR konfidenciaintervallum"), color="red", size = 1.2) +
   labs(y = "Szórás",
        title = "Gördülőablakos konfidenciaintervallum (5%)",
-       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várhatóértékben AK (alapkamat)",
+       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várható értékben AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma)
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))+
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
 ggsave("var_arima212_garch11_mean1.png")
 report(garch_roll_result_mean1, type = "VaR", VaR.alpha = 0.05)
 
@@ -766,14 +779,15 @@ ggplot(filtered_data, aes(x = Time)) +
   geom_line(aes(y = mean1, color = "Becsült loghozam"), size = 1.2) + 
   labs(y = "Euró-Forint loghozam",
        title = "Tesztidőszakra becsült és tényleges loghozam",
-       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várhatóértékben AK (alapkamat)",
+       subtitle = "ARIMAX(2,1,2)-GARCH(1,1) modell, várható értékben AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
-  scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
+  scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))+
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
 ggsave("forec_arima212_garch11_mean1.png")
 
  
@@ -805,7 +819,7 @@ garch_modell_results <- rbind(garch_modell_results,
 
 
 # ARIMAX(2,1,2)-GARCH(1,1), varainciában AK (alapkamat)
-name_var1 <- "ARIMA(2,1,2)-GARCHX(1,1) modell, varianciában AK (alapkamat)"
+name_var1 <- "ARIMA(2,1,2)-GARCHX(1,1) modell, varianciában AK"
 
 var_vars <- as.matrix(Training[,c('alapkamat')])
 modell_spec_var1 <- ugarchspec(mean.model = list(armaOrder = arma_order), 
@@ -820,7 +834,8 @@ ic_var1 <- infocriteria(modell_fit_var1)
 
 result_var1 <- modell_fit_var1@fit$robust.matcoef
 result_var1 %>%
-  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCH(1,1) modell, varianciában AK (alapkamat), modell együtthatói") %>%
+  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCH(1,1) modell, varianciában AK, modell együtthatói", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 becs_szoras_var1 <- sigma(modell_fit_var1)
@@ -828,12 +843,13 @@ ggplot(Training, aes(x = Time)) +
   geom_line(aes(y = becs_szoras_var1), color = "blue", size = 1.2) + 
   labs(y = "Szórás",
        title = "Az Euró-Forint loghozamának szórása",
-       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varainciában AK (alapkamat)",
+       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varianciában AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y", limits = as.Date(c("2018-05-31", "2024-10-31")))+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma) 
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))
+
 ggsave("szoras_arima212_garch11_var1.png")
 
 # Gördülőablakos 
@@ -855,11 +871,13 @@ ggplot(garch_roll_forecast_var1, aes(x = filtered_data$Time[1:162])) +
   geom_line(aes(y = `alpha(5%)`, color = "VaR konfidenciaintervallum"), color="red", size = 1.2) +
   labs(y = "Szórás",
        title = "Gördülőablakos konfidenciaintervallum (5%)",
-       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varainciában AK (alapkamat)",
+       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varianciában AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma)
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))+
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
+
 ggsave("var_arima212_garch11_var1.png")
 
 report(garch_roll_result_var1, type = "VaR", VaR.alpha = 0.05)
@@ -875,13 +893,14 @@ ggplot(filtered_data, aes(x = Time)) +
   geom_line(aes(y = var1, color = "Becsült loghozam"), size = 1.2) + 
   labs(y = "Euró-Forint loghozam",
        title = "Tesztidőszakra becsült és tényleges loghozam",
-       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varainciában AK (alapkamat)",
+       subtitle = "ARIMA(2,1,2)-GARCHX(1,1) modell, varianciában AK",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
   scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))
 ggsave("forecast_arima212_garch11_var1.png")
 
@@ -913,41 +932,42 @@ garch_modell_results <- rbind(garch_modell_results,
 
 
 # ARIMAX(2,1,2)-GARCH(1,1), várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó)
-name_mean1_var2 <- "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó)"
+name_mean2 <- "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben VM,"
 
-var_vars <- as.matrix(Training[,c('alapkamat', 'kinfo')])
-mean_vars <- as.matrix(Training[,c('alapkamat')])
-modell_spec_mean1_var2 <- ugarchspec(mean.model = list(armaOrder = arma_order, 
+
+mean_vars <- as.matrix(Training[,c('vargaMihaly')])
+modell_spec_mean2 <- ugarchspec(mean.model = list(armaOrder = arma_order, 
                                                        external.regressors = mean_vars), 
                                variance.model = list(model = "sGARCH", 
-                                                     garchOrder = garch_order, 
-                                                     external.regressors = var_vars),
+                                                     garchOrder = garch_order),
                                distribution.model = distribution_model_wx)
-modell_fit_mean1_var2 <-  ugarchfit(spec= modell_spec_mean1_var2, data= Training$d_eur)
-plot(modell_fit_mean1_var2, which = 'all')
+modell_fit_mean2 <-  ugarchfit(spec= modell_spec_mean2, data= Training$d_eur)
+plot(modell_fit_mean2, which = 'all')
 
-ic_mean1_var2 <- infocriteria(modell_fit_mean1_var2)
+ic_mean2 <- infocriteria(modell_fit_mean2)
 
-result_mean1_var2 <- modell_fit_mean1_var2@fit$robust.matcoef
-result_mean1_var2 %>%
-  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó), modell együtthatói") %>%
+result_mean2 <- modell_fit_mean2@fit$robust.matcoef
+result_mean2 %>%
+  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben VM", 
+      format.args = list(scientific = FALSE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
-becs_szoras_mean1_var2 <- sigma(modell_fit_mean1_var2)
+becs_szoras_mean2 <- sigma(modell_fit_mean2)
 ggplot(Training, aes(x = Time)) + 
-  geom_line(aes(y = becs_szoras_mean1_var2), color = "blue", size = 1.2) + 
+  geom_line(aes(y = becs_szoras_mean2), color = "blue", size = 1.2) + 
   labs(y = "Szórás",
        title = "Az Euró-Forint loghozamának szórása",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y", limits = as.Date(c("2018-05-31", "2024-10-31")))+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma) 
-ggsave("szoras_arima212_garch11_mean1_var2.png")
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))
+
+ggsave("szoras_arima212_garch11_mean2.png")
 
 # Gördülőablakos 
-garch_roll_result_mean1_var2 <- ugarchroll(spec = modell_spec_mean1_var2, 
+garch_roll_result_mean2 <- ugarchroll(spec = modell_spec_mean2, 
                                      data = Training$d_eur,  
                                      n.start = 1479,     
                                      refit.every = 30,   
@@ -956,75 +976,78 @@ garch_roll_result_mean1_var2 <- ugarchroll(spec = modell_spec_mean1_var2,
                                      VaR.alpha = 0.05,
                                      solver = 'hybrid')
 
-garch_roll_forecast_mean1_var2 <- as.data.frame(garch_roll_result_mean1_var2@forecast$VaR)
-garch_roll_forecast_mean1_var2 <- cbind(garch_roll_forecast_mean1_var2, filtered_data$Time[1:162])
+garch_roll_forecast_mean2 <- as.data.frame(garch_roll_result_mean2@forecast$VaR)
+garch_roll_forecast_mean2 <- cbind(garch_roll_forecast_mean2, filtered_data$Time[1:162])
 
 # VAR
-ggplot(garch_roll_forecast_mean1_var2, aes(x = filtered_data$Time[1:162])) +
+ggplot(garch_roll_forecast_mean2, aes(x = filtered_data$Time[1:162])) +
   geom_line(aes(y = realized, color = "Tényleges loghozam"), color="blue") +
   geom_line(aes(y = `alpha(5%)`, color = "VaR konfidenciaintervallum"), color="red", size = 1.2) +
   labs(y = "Szórás",
        title = "Gördülőablakos konfidenciaintervallum (5%)",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma)
-ggsave("var_arima212_garch11_mean1_var2.png")
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0)) +
+scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
 
-report(garch_roll_result_mean1_var2, type = "VaR", VaR.alpha = 0.05)
+ggsave("var_arima212_garch11_mean2.png")
+
+report(garch_roll_result_mean2, type = "VaR", VaR.alpha = 0.05)
 
 
 
 # Előrejelzés
 
-filtered_data$mean1_var2 <- fitted(modell_fit_mean1_var2)[which(Training$Time >= start_date & Training$Time <= end_date)]
+filtered_data$mean2 <- fitted(modell_fit_mean2)[which(Training$Time >= start_date & Training$Time <= end_date)]
 
 # Becsült és tényleges
 ggplot(filtered_data, aes(x = Time)) +
   geom_line(aes(y = d_eur, color = "Tényleges loghozam"), size = 1.2) +  
-  geom_line(aes(y = mean1_var2, color = "Becsült loghozam"), size = 1.2) + 
+  geom_line(aes(y = mean2, color = "Becsült loghozam"), size = 1.2) + 
   labs(y = "Euró-Forint loghozam",
        title = "Tesztidőszakra becsült és tényleges loghozam",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben AK (alapkamat), varianciában AK (alapkamat) és KI (kormányinfó)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y")+
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month") +
   scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))
-ggsave("forecast_arima212_garch11_mean1_var2.png")
+ggsave("forecast_arima212_garch11_mean2.png")
 
  
-predicted_values_mean1_var2 <- filtered_data$mean1_var2 
+predicted_values_mean2 <- filtered_data$mean2 
 
 
 # RMSE
-rmse_mean1_var2 <- sqrt(mean((actual_values - predicted_values_mean1_var2)^2))
+rmse_mean2 <- sqrt(mean((actual_values - predicted_values_mean2)^2))
 
 # MAE
-mae_mean1_var2 <- mean(abs(actual_values - predicted_values_mean1_var2))
+mae_mean2 <- mean(abs(actual_values - predicted_values_mean2))
 
 # TIC 
-tic_mean1_var2 <- sqrt(sum((actual_values - predicted_values_mean1_var2)^2)) /
-  (sqrt(sum(predicted_values_mean1_var2^2)) + sqrt(sum(actual_values^2)))
+tic_mean2 <- sqrt(sum((actual_values - predicted_values_mean2)^2)) /
+  (sqrt(sum(predicted_values_mean2^2)) + sqrt(sum(actual_values^2)))
 
 
 garch_modell_results <- rbind(garch_modell_results, 
-                              data.frame(modell = name_mean1_var2,
-                                         AIC = ic_mean1_var2[1], 
-                                         BIC = ic_mean1_var2[2], 
-                                         HQ = ic_mean1_var2[3],
-                                         RMSE = rmse_mean1_var2, 
-                                         MAE = mae_mean1_var2, 
-                                         TIC = tic_mean1_var2))
+                              data.frame(modell = name_mean2,
+                                         AIC = ic_mean2[1], 
+                                         BIC = ic_mean2[2], 
+                                         HQ = ic_mean2[4],
+                                         RMSE = rmse_mean2, 
+                                         MAE = mae_mean2, 
+                                         TIC = tic_mean2))
 
 
 
 # ARIMAX(2,1,2)-GARCH(1,1), várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály)
-name_overall <- "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály)"
+name_overall <- "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben és a varianciában is AK, KI, MGy és VM"
 
 var_vars <- as.matrix(Training[,c('alapkamat', 'vargaMihaly','kinfo','matolcsyGyorgy')])
 mean_vars <- as.matrix(Training[,c('alapkamat', 'vargaMihaly', 'kinfo','matolcsyGyorgy')])
@@ -1041,7 +1064,8 @@ ic_overall <- infocriteria(modell_fit_overall)
 
 result_overall <- modell_fit_overall@fit$robust.matcoef
 result_overall %>%
-  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály), modell együtthatói") %>%
+  kbl(digits = 4, align = "c", caption = "ARIMAX(2,1,2)-GARCHX(1,1), várható értékben és \n a varianciában is AK, KI, MGy és VM, modell együtthatói", 
+      format.args = list(scientific = TRUE)) %>%
   kable_styling(full_width = FALSE, position = "center")
 
 becs_szoras_overall <- sigma(modell_fit_overall)
@@ -1049,12 +1073,13 @@ ggplot(Training, aes(x = Time)) +
   geom_line(aes(y = becs_szoras_overall), color = "blue", size = 1.2) + 
   labs(y = "Szórás",
        title = "Az Euró-Forint loghozamának szórása",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és \n a varianciában is AK, KI, MGy és VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   scale_x_date(breaks = "year", date_labels = "%Y", limits = as.Date(c("2018-05-31", "2024-10-31")))+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma) 
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0))
+
 ggsave("szoras_arima212_garch11_overall.png")
 
 # Gördülőablakos 
@@ -1075,11 +1100,12 @@ ggplot(garch_roll_forecast_overall, aes(x = filtered_data$Time[1:162])) +
   geom_line(aes(y = `alpha(5%)`, color = "VaR konfidenciaintervallum"), color="red", size = 1.2) +
   labs(y = "Szórás",
        title = "Gördülőablakos konfidenciaintervallum (5%)",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és \n a varianciában is AK, KI, MGy és VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
-  theme(axis.title.x = element_blank())
-scale_y_continuous(labels = scales::comma)
+  theme(axis.title.x = element_blank(),
+        plot.caption = element_text(hjust = 0)) +
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
 ggsave("var_arima212_garch11_overall.png")
 
 report(garch_roll_result_overall, type = "VaR", VaR.alpha = 0.05)
@@ -1095,14 +1121,15 @@ ggplot(filtered_data, aes(x = Time)) +
   geom_line(aes(y = overall, color = "Becsült loghozam"), size = 1.2) + 
   labs(y = "Euró-Forint loghozam",
        title = "Tesztidőszakra becsült és tényleges loghozam",
-       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és a varianciában is AK (alapkamat), KI (kormányinfó), MGy (Matolcsy György) és VM (Varga Mihály)",
+       subtitle = "ARIMAX(2,1,2)-GARCHX(1,1) modell, várható értékben és \n a varianciában is AK, KI, MGy és VM",
        caption = "Forrás: Saját számítás és szerkesztés.")+
   theme_bw()+
   theme(axis.title.x = element_blank(),
         legend.title = element_blank(),
-        legend.position = "bottom") +
-  scale_y_continuous(labels = scales::comma)+
-  scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))
+        legend.position = "bottom",
+        plot.caption = element_text(hjust = 0)) +
+  scale_color_manual(values = c("Tényleges loghozam" = "blue", "Becsült loghozam" = "red"))+
+  scale_x_date(date_labels = "%Y-%m", date_breaks = "1 month")
 ggsave("forecast_arima212_garch11_overall.png")
 
  
@@ -1124,11 +1151,13 @@ garch_modell_results <- rbind(garch_modell_results,
                               data.frame(modell = name_overall,
                                          AIC = ic_overall[1], 
                                          BIC = ic_overall[2], 
-                                         HQ = ic_overall[3],
+                                         HQ = ic_overall[4],
                                          RMSE = rmse_overall, 
                                          MAE = mae_overall, 
                                          TIC = tic_overall))
 
-  garch_modell_results %>%
-     kbl(digits = 5, align = "c", caption = "ARIMA(X)(2,1,2)-GARCH(X)(1,1) modellek kiértékelése") %>%
-     kable_styling(full_width = FALSE, position = "center")
+garch_modell_results %>%
+   kbl(digits = 5, align = "c", caption = "ARIMA(X)(2,1,2)-GARCH(X)(1,1) modellek kiértékelése", 
+       format.args = list(scientific = FALSE)) %>%
+   kable_styling(full_width = FALSE, position = "center")
+
